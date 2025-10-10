@@ -19,9 +19,11 @@ class Publisher(Node):
 
         # create publisher with: self.create_publisher(<msg type>, <topic>, <qos>)
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        #self.kill_publisher = self.create_publisher(Bool, "/kill", 10)
 
         # create a timer with: self.create_timer(<second>, <callback>)
         self.timer = self.create_timer(0.2, self.timer_callback)
+        self.kill_subscriber = self.create_subscription(Bool, "/kill", self.kill_callback, 10)
 
     def timer_callback(self) -> None:
         """
@@ -32,7 +34,7 @@ class Publisher(Node):
         msg.linear.x = 2.0
         msg.angular.z = 3.0
         self.get_logger().info(f"{msg}\n")
-    #msg.data = "sending constant control..."
+        #msg.data = "sending constant control..."
 
 
         # publish heartbeat counter
@@ -41,13 +43,27 @@ class Publisher(Node):
         # increment counter
         # self.hb_counter += 1
 
-    def health_callback(self, msg: Bool) -> None:
+    def kill_callback(self, msg: Bool) -> None:
         """
         Sensor health callback triggered by subscription
         """
-        if not msg.data:
-            self.get_logger().fatal("Heartbeat stopped")
-            self.hb_timer.cancel()
+        if msg.data == True:
+            velocity_msg = Twist()
+            velocity_msg.linear.x = 0.0
+            velocity_msg.linear.y = 0.0
+            velocity_msg.linear.z = 0.0
+            velocity_msg.angular.x = 0.0
+            velocity_msg.angular.y = 0.0
+            velocity_msg.angular.z = 0.0
+            self.publisher.publish(velocity_msg)
+
+            self.get_logger().fatal("Kill Received")
+            self.timer.cancel()
+
+            kill_msg = 0
+            self.get_logger().info(f"{kill_msg}")
+            self.publisher.publish(kill_msg)
+
 
 
 if __name__ == "__main__":
