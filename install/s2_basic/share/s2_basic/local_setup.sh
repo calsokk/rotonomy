@@ -1,1 +1,0 @@
-/home/aa274/autonomy_ws/src/rotonomy/build/s2_basic/ament_cmake_environment_hooks/local_setup.sh
