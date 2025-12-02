@@ -47,14 +47,14 @@ class Frontier_Explorer(Node):
 		#unknown_mask = # TODO use np.where to find unknown mask which is indicated by the value -1
 		#unoccupied_mask = # TODO use np.where to find unknown mask which is indicated by values in range [0, 0.5)
         unknown_mask = np.where(self.occupancy.probs == -1, 1, 0)
-        unoccupied_mask = np.where(self.occupancy.probs >= 0 and self.occupancy.probs < 0.5, 1, 0)
+        unoccupied_mask = np.where((self.occupancy.probs >= 0) & (self.occupancy.probs < 0.5), 1, 0)
 
         kernel = np.ones((window_size, window_size)) / window_size**2
         occupied= convolve2d(occupied_mask, kernel, mode="same") # TODO 2d convolution of mask (use convolve2d) using kernel and mode='same'
         unoccupied= convolve2d(unoccupied_mask, kernel, mode="same") # TODO 2d convolution of mask (use convolve2d) using kernel and mode='same'
         unknown= convolve2d(unknown_mask, kernel, mode="same") # TODO 2d convolution of mask (use convolve2d) using kernel and mode='same'
 
-        frontier_mask = np.where(occupied == 0 and unoccupied >= 0.3 and unknown >= 0.2)# TODO use np.wheremap to make frontier mask based on the 3 conditions of Exploration Heuristics
+        frontier_mask = np.where((occupied == 0) & (unoccupied >= 0.3) & (unknown >= 0.2))# TODO use np.wheremap to make frontier mask based on the 3 conditions of Exploration Heuristics
         frontier_states = np.transpose(np.nonzero(np.transpose(frontier_mask)))
         frontier_states = self.occupancy.grid2state(frontier_states)
 
