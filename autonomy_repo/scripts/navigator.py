@@ -9,6 +9,8 @@ from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
 from scipy.interpolate import splev, splrep
 from asl_tb3_lib.grids import StochOccupancyGrid2D
 import typing as T
+import random 
+from math import sqrt
 V_PREV_THRES = 0.0001
 
 
@@ -343,6 +345,7 @@ class RRT(object):
         """
         Run RRT. Returns True if a path to the goal region was found (self.path set).
         """
+        print("Running RRT Solve!") 
         for it in range(self.max_iters):
             x_rand = self.sample_random()
             x_near = self.nearest_vertex(x_rand)
@@ -360,20 +363,14 @@ class RRT(object):
 
             # Check goal tolerance
             if self.distance(x_new, self.x_goal) <= self.goal_tolerance:
-                # Optionally add the goal itself if the straight segment is collision-free
-                if self.segment_collision_free(x_new, self.x_goal):
-                    self.came_from[self.x_goal] = x_new
-                    self.vertices.append(self.x_goal)
-                    self.path = self.reconstruct_path(self.x_goal)
-                else:
-                    self.path = self.reconstruct_path(x_new)
+                self.path = self.reconstruct_path(x_new)
                 return True
 
         # failed to find within max_iters
         return False
 
 class Navigator(BaseNavigator):
-    def __init__(self, planner_type="AStar") -> None:
+    def __init__(self, planner_type="RRT") -> None:
         """
         planner_type: "AStar" or "RRT"
         """
@@ -413,6 +410,11 @@ class Navigator(BaseNavigator):
         """
         lo = (state.x - horizon, state.y - horizon)
         hi = (state.x + horizon, state.y + horizon)
+        
+        if self.planner_type == "RRT": 
+            lo = (state.x - 4.0, state.y - 4.0)
+            hi = (state.x + 4.0, state.y + 4.0)
+        
 
         if self.planner_type == "AStar":
             planner = AStar(lo, hi, (state.x, state.y), (goal.x, goal.y),
@@ -425,10 +427,11 @@ class Navigator(BaseNavigator):
                           (state.x, state.y), (goal.x, goal.y),
                           occupancy,
                           resolution=resolution,
-                          step_size=0.5,          # tune these as needed
-                          max_iters=3000,
-                          goal_sample_rate=0.05,
-                          goal_tolerance=0.4)
+                          step_size=0.1,          # tune these as needed
+                          max_iters=5000,
+                          goal_sample_rate=0.1,
+                          goal_tolerance=0.3)
+            print("Running planner.solve")
             success = planner.solve()
             return planner.path if success else None
 
