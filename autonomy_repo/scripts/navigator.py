@@ -303,12 +303,12 @@ class RRT(object):
         vec = x_rand - x_near
         dist = np.linalg.norm(vec)
         if dist == 0.0:
-            return tuple(self.snap_to_grid(x_near))
+            return tuple(x_near)
         if dist <= self.step_size:
             x_new = x_rand
         else:
             x_new = x_near + (vec / dist) * self.step_size
-        x_new = tuple(self.snap_to_grid((float(x_new[0]), float(x_new[1]))))
+        x_new = tuple((float(x_new[0]), float(x_new[1])))
         return x_new
 
     def segment_collision_free(self, a, b):
@@ -327,7 +327,7 @@ class RRT(object):
         n_steps = max(2, int(np.ceil(dist / step)))
         for t in np.linspace(0.0, 1.0, n_steps + 1):
             p = a + t * (b - a)
-            p_snap = tuple(self.snap_to_grid((float(p[0]), float(p[1]))))
+            p_snap = tuple((float(p[0]), float(p[1])))
             if not self.is_free(p_snap):
                 return False
         return True
@@ -410,10 +410,6 @@ class Navigator(BaseNavigator):
         """
         lo = (state.x - horizon, state.y - horizon)
         hi = (state.x + horizon, state.y + horizon)
-        
-        if self.planner_type == "RRT": 
-            lo = (state.x - 4.0, state.y - 4.0)
-            hi = (state.x + 4.0, state.y + 4.0)
         
 
         if self.planner_type == "AStar":
